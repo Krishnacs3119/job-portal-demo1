@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom"
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom"
 import { AuthProvider } from "@/context/AuthContext"
 import RootLayout from "@/layouts/RootLayout"
 import Home from "@/pages/Home"
@@ -16,7 +16,8 @@ import ForgotPassword from "@/pages/ForgotPassword"
 import ResetPassword from "@/pages/ResetPassword"
 import Onboarding from "@/pages/Onboarding"
 import Dashboard from "@/pages/Dashboard"
-import { ProtectedRoute, PublicOnlyRoute, OnboardingRoute, RoleRoute } from "@/components/ProtectedRoute"
+import AdminDashboard from "@/pages/AdminDashboard"
+import { ProtectedRoute, PublicOnlyRoute, OnboardingRoute, RoleRoute, AdminRoute } from "@/components/ProtectedRoute"
 
 const router = createBrowserRouter([
   {
@@ -27,7 +28,6 @@ const router = createBrowserRouter([
         index: true,
         element: <Home />,
       },
-      // Public Job browsing & details
       {
         path: "jobs",
         element: <Jobs />,
@@ -36,8 +36,6 @@ const router = createBrowserRouter([
         path: "jobs/:id",
         element: <JobDetails />,
       },
-
-      // Candidate-only routes
       {
         path: "saved",
         element: (
@@ -54,8 +52,6 @@ const router = createBrowserRouter([
           </RoleRoute>
         ),
       },
-
-      // Recruiter-only routes
       {
         path: "company/setup",
         element: (
@@ -88,8 +84,6 @@ const router = createBrowserRouter([
           </RoleRoute>
         ),
       },
-
-      // Public-only Auth Routes (redirects away if already signed in)
       {
         path: "login",
         element: (
@@ -114,14 +108,10 @@ const router = createBrowserRouter([
           </PublicOnlyRoute>
         ),
       },
-
-      // Password Recovery Route
       {
         path: "reset-password",
         element: <ResetPassword />,
       },
-
-      // Role Onboarding Route (accessible only if role is NULL)
       {
         path: "onboarding",
         element: (
@@ -130,8 +120,6 @@ const router = createBrowserRouter([
           </OnboardingRoute>
         ),
       },
-
-      // General Protected Dashboard (requires login + chosen role)
       {
         path: "dashboard",
         element: (
@@ -140,18 +128,17 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-
-      // Admin Control Panel placeholder (for Part 7)
+      {
+        path: "admin",
+        element: (
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
+        ),
+      },
       {
         path: "admin/control-panel",
-        element: (
-          <RoleRoute allowedRoles={["admin"]}>
-            <div className="p-8 text-center border rounded-lg">
-              <h2 className="text-xl font-bold">Admin Control Panel</h2>
-              <p className="text-muted-foreground mt-2">Coming in Part 7.</p>
-            </div>
-          </RoleRoute>
-        ),
+        element: <Navigate to="/admin" replace />,
       },
     ],
   },

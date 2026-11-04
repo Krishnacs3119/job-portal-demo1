@@ -1,7 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom"
 import { useAuth } from "@/context/AuthContext"
 
-// Ensures user is logged in and has completed role onboarding
 export function ProtectedRoute({ children }) {
   const { user, profile, loading } = useAuth()
   const location = useLocation()
@@ -18,7 +17,6 @@ export function ProtectedRoute({ children }) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  // If user hasn't selected a role yet, redirect to onboarding
   if (profile && profile.role === null) {
     return <Navigate to="/onboarding" replace />
   }
@@ -26,7 +24,6 @@ export function ProtectedRoute({ children }) {
   return children ? children : <Outlet />
 }
 
-// Role-based route guard for Recruiter / Admin / Candidate protected views
 export function RoleRoute({ allowedRoles, children }) {
   const { user, profile, loading } = useAuth()
   const location = useLocation()
@@ -64,7 +61,33 @@ export function RoleRoute({ allowedRoles, children }) {
   return children ? children : <Outlet />
 }
 
-// Only accessible when logged out (e.g. Login, Signup)
+export function AdminRoute({ children }) {
+  const { user, profile, loading } = useAuth()
+  const location = useLocation()
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <p className="text-sm text-muted-foreground">Verifying administrator permissions...</p>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />
+  }
+
+  if (profile && profile.role === null) {
+    return <Navigate to="/onboarding" replace />
+  }
+
+  if (profile?.role !== "admin") {
+    return <Navigate to="/dashboard" replace />
+  }
+
+  return children ? children : <Outlet />
+}
+
 export function PublicOnlyRoute({ children }) {
   const { user, profile, loading } = useAuth()
 
@@ -86,7 +109,6 @@ export function PublicOnlyRoute({ children }) {
   return children ? children : <Outlet />
 }
 
-// Only accessible if logged in but role is not chosen yet
 export function OnboardingRoute({ children }) {
   const { user, profile, loading } = useAuth()
 

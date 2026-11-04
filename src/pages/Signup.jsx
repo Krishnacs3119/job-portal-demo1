@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext"
 import Turnstile from "@/components/Turnstile"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -54,10 +55,8 @@ export default function Signup() {
       if (error) {
         setErrorMsg(error.message)
       } else if (data?.session) {
-        // Direct session created (email confirmation is off)
         navigate("/onboarding", { replace: true })
       } else {
-        // Email confirmation is required
         setSuccessMsg(
           "Registration successful! Please check your email inbox to confirm your account before logging in."
         )
@@ -169,9 +168,8 @@ export default function Signup() {
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -183,9 +181,8 @@ export default function Signup() {
 
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
+              <PasswordInput
                 id="confirmPassword"
-                type="password"
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}

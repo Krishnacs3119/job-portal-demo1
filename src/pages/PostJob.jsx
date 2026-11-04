@@ -30,13 +30,11 @@ export default function PostJob() {
   const [noticeMsg, setNoticeMsg] = useState("")
   const [loading, setLoading] = useState(false)
 
-  // Load recruiter's companies
   useEffect(() => {
     async function loadCompanies() {
       try {
         const { data, error } = await supabase.rpc("get_my_companies")
         if (error) {
-          // Fallback query if RPC isn't loaded
           const { data: memberData } = await supabase
             .from("company_members")
             .select("company:companies(*)")
@@ -61,25 +59,34 @@ export default function PostJob() {
     }
   }, [user])
 
-  // If no company found, redirect to /company/setup
   useEffect(() => {
     if (!checkingCompanies && companies.length === 0) {
       navigate("/company/setup", { replace: true })
     }
   }, [checkingCompanies, companies, navigate])
 
+  const selectedCompany = companies.find((c) => c.id === selectedCompanyId)
+  const isVerified = selectedCompany
+    ? selectedCompany.verification_status === "verified" || selectedCompany.verification_status === "approved"
+    : false
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setErrorMsg("")
     setNoticeMsg("")
 
-    if (!title.trim() || !location.trim() || !description.trim()) {
-      setErrorMsg("Please fill in title, location, and job description.")
+    if (!selectedCompanyId) {
+      setErrorMsg("Please select a company to post for.")
       return
     }
 
-    if (!selectedCompanyId) {
-      setErrorMsg("Please select a company to post for.")
+    if (!isVerified) {
+      setErrorMsg("Your company must be verified by an administrator before publishing job openings.")
+      return
+    }
+
+    if (!title.trim() || !location.trim() || !description.trim()) {
+      setErrorMsg("Please fill in title, location, and job description.")
       return
     }
 
@@ -150,6 +157,17 @@ export default function PostJob() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {!isVerified && selectedCompany && (
+            <Alert className="border-amber-500 bg-amber-50 text-amber-900">
+              <AlertDescription className="space-y-1">
+                <p className="font-semibold">Company verification pending approval</p>
+                <p className="text-sm">
+                  {selectedCompany.name} is currently marked as <strong>{selectedCompany.verification_status || "pending"}</strong>. Only verified employers can publish active job listings. Please await administrative approval or contact support.
+                </p>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {noticeMsg && (
             <Alert className="border-amber-500 bg-amber-50 text-amber-900">
               <AlertDescription className="space-y-3">
@@ -177,7 +195,6 @@ export default function PostJob() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Company selection */}
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <Label htmlFor="company-select">Hiring Company *</Label>
@@ -194,13 +211,12 @@ export default function PostJob() {
               >
                 {companies.map((comp) => (
                   <option key={comp.id} value={comp.id}>
-                    {comp.name} ({comp.location})
+                    {comp.name} ({comp.location}) [{comp.verification_status || "pending"}]
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Job Title */}
             <div className="space-y-2">
               <Label htmlFor="job-title">Job Title *</Label>
               <Input
@@ -212,7 +228,6 @@ export default function PostJob() {
               />
             </div>
 
-            {/* Location & Job Type */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="job-location">Location / Work Mode *</Label>
@@ -242,7 +257,6 @@ export default function PostJob() {
               </div>
             </div>
 
-            {/* Experience Level & Salary */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="experience-level">Experience Required *</Label>
@@ -282,7 +296,6 @@ export default function PostJob() {
               </div>
             </div>
 
-            {/* Description */}
             <div className="space-y-2">
               <Label htmlFor="job-desc">Job Description *</Label>
               <Textarea
@@ -295,7 +308,6 @@ export default function PostJob() {
               />
             </div>
 
-            {/* Requirements */}
             <div className="space-y-2">
               <Label htmlFor="job-req">Skills & Qualifications</Label>
               <Textarea
@@ -307,8 +319,8 @@ export default function PostJob() {
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Publishing Job..." : "Publish Job Opening"}
+            <Button type="submit" className="w-full" disabled={loading || !isVerified}>
+              {loading ? "Publishing Job..." : isVerified ? "Publish Job Opening" : "Company Verification Required"}
             </Button>
           </form>
         </CardContent>

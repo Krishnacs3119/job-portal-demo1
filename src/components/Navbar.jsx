@@ -43,16 +43,16 @@ export default function Navbar() {
 
           {user && role === "candidate" && (
             <>
-              <NavLink to="/saved" className={navLinkClass}>
-                Saved Jobs
-              </NavLink>
               <NavLink to="/dashboard/my-applications" className={navLinkClass}>
                 My Applications
+              </NavLink>
+              <NavLink to="/saved" className={navLinkClass}>
+                Saved Jobs
               </NavLink>
             </>
           )}
 
-          {user && (role === "recruiter" || role === "admin") && (
+          {user && role === "recruiter" && (
             <>
               <NavLink to="/jobs/new" className={navLinkClass}>
                 Post a Job
@@ -61,6 +61,12 @@ export default function Navbar() {
                 My Jobs
               </NavLink>
             </>
+          )}
+
+          {user && role === "admin" && (
+            <NavLink to="/admin" className={navLinkClass}>
+              Admin Panel
+            </NavLink>
           )}
 
           {user && (
