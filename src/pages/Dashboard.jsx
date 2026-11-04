@@ -131,8 +131,8 @@ export default function Dashboard() {
               <span className="font-medium">{profile?.full_name || "Not set"}</span>
             </div>
             <div>
-              <span className="text-muted-foreground">Email: </span>
-              <span className="font-medium">{profile?.email || user?.email}</span>
+              <span className="text-muted-foreground">{profile?.email ? "Email: " : "Phone: "}</span>
+              <span className="font-medium">{profile?.email || profile?.phone || user?.phone || user?.email || "—"}</span>
             </div>
             <div>
               <span className="text-muted-foreground">Member Since: </span>

@@ -869,7 +869,7 @@ export default function AdminDashboard() {
                     {filteredUsers.map((u) => (
                       <tr key={u.id} className="hover:bg-muted/10">
                         <td className="py-2.5 px-3 font-medium text-foreground">{u.full_name || "—"}</td>
-                        <td className="py-2.5 px-3 text-xs text-muted-foreground">{u.email}</td>
+                        <td className="py-2.5 px-3 text-xs text-muted-foreground">{u.email || u.phone || "—"}</td>
                         <td className="py-2.5 px-3">
                           <Badge className={`uppercase text-[10px] tracking-wider ${roleBadgeVariant(u.role)}`}>
                             {u.role || "Unassigned"}

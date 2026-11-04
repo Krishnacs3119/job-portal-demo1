@@ -9,7 +9,6 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  // Fetch user profile from public.profiles
   const fetchProfile = async (userId) => {
     if (!userId) {
       setProfile(null)
@@ -35,7 +34,6 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // Initial session check and auth change listener
   useEffect(() => {
     let mounted = true
 
@@ -80,19 +78,14 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  // Login with Password:
-  // Primary path: Supabase Edge Function 'login'
-  // Fallback path: Database RPC functions (check_account_lock, record_failed_login, reset_login_attempts)
   const loginWithPassword = async ({ email, password, captchaToken }) => {
     const normalizedEmail = (email || "").trim().toLowerCase()
 
     try {
-      // 1. Attempt via Edge Function if deployed
       const { data: edgeData, error: edgeError } = await supabase.functions.invoke("login", {
         body: { email: normalizedEmail, password, captchaToken },
       })
 
-      // If Edge Function responded successfully with a session
       if (!edgeError && edgeData?.session) {
         const { error: sessionError } = await supabase.auth.setSession(edgeData.session)
         if (sessionError) return { error: { message: sessionError.message } }
@@ -100,7 +93,6 @@ export function AuthProvider({ children }) {
         return { data: { user: edgeData.user, session: edgeData.session, profile: userProfile } }
       }
 
-      // If Edge Function returned a specific lockout or auth rejection
       if (edgeError && edgeError.context) {
         try {
           const body = await edgeError.context.json()
@@ -116,8 +108,6 @@ export function AuthProvider({ children }) {
         } catch (_) {}
       }
 
-      // 2. Database RPC Fallback (runs if Edge Function is not deployed or fails)
-      // Check if email is currently locked in login_attempts
       const { data: lockStatus } = await supabase.rpc("check_account_lock", {
         target_email: normalizedEmail,
       })
@@ -132,14 +122,12 @@ export function AuthProvider({ children }) {
         }
       }
 
-      // Attempt sign-in with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password,
       })
 
       if (authError) {
-        // Record failed attempt in database
         const { data: failResult } = await supabase.rpc("record_failed_login", {
           target_email: normalizedEmail,
         })
@@ -162,7 +150,6 @@ export function AuthProvider({ children }) {
         }
       }
 
-      // Sign-in successful: reset failed counter
       await supabase.rpc("reset_login_attempts", {
         target_email: normalizedEmail,
       })
@@ -174,7 +161,6 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // Sign up with Email + Password + Full Name
   const signUpWithPassword = async ({ email, password, fullName, captchaToken }) => {
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -189,7 +175,50 @@ export function AuthProvider({ children }) {
     return { data, error }
   }
 
-  // Sign in with Google OAuth
+  const signInWithPhoneOtp = async ({ phone, fullName }) => {
+    try {
+      const options = {
+        channel: "sms",
+      }
+      if (fullName?.trim()) {
+        options.data = { full_name: fullName.trim() }
+      }
+
+      const { data, error } = await supabase.auth.signInWithOtp({
+        phone,
+        options,
+      })
+      return { data, error }
+    } catch (err) {
+      return { data: null, error: err }
+    }
+  }
+
+  const verifyPhoneOtp = async ({ phone, token }) => {
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone,
+        token: token.trim(),
+        type: "sms",
+      })
+
+      if (error) return { data: null, error }
+
+      let userProfile = null
+      if (data?.user?.id) {
+        userProfile = await fetchProfile(data.user.id)
+        if (!userProfile) {
+          await new Promise((resolve) => setTimeout(resolve, 350))
+          userProfile = await fetchProfile(data.user.id)
+        }
+      }
+
+      return { data: { ...data, profile: userProfile }, error: null }
+    } catch (err) {
+      return { data: null, error: err }
+    }
+  }
+
   const signInWithGoogle = async () => {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -200,7 +229,6 @@ export function AuthProvider({ children }) {
     return { data, error }
   }
 
-  // Request password reset email
   const resetPasswordForEmail = async (email) => {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
@@ -208,19 +236,16 @@ export function AuthProvider({ children }) {
     return { data, error }
   }
 
-  // Update password and immediately unlock account (Edge Function + Database RPC fallback)
   const updatePasswordAndUnlock = async (newPassword) => {
     const { data, error } = await supabase.auth.updateUser({
       password: newPassword,
     })
     if (error) throw error
 
-    // Try unlock via Edge function
     try {
       await supabase.functions.invoke("unlock")
     } catch (_) {}
 
-    // Fallback: Clear database lockout record directly via RPC
     const targetEmail = data.user?.email || user?.email
     if (targetEmail) {
       await supabase.rpc("reset_login_attempts", {
@@ -235,7 +260,6 @@ export function AuthProvider({ children }) {
     return data
   }
 
-  // Set initial role (Candidate / Recruiter) via Postgres SECURITY DEFINER function
   const setInitialRole = async (newRole) => {
     const { error } = await supabase.rpc("set_initial_role", {
       new_role: newRole,
@@ -247,7 +271,6 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // Sign out
   const signOut = async () => {
     await supabase.auth.signOut()
     setUser(null)
@@ -263,6 +286,8 @@ export function AuthProvider({ children }) {
     refreshProfile: () => fetchProfile(user?.id),
     loginWithPassword,
     signUpWithPassword,
+    signInWithPhoneOtp,
+    verifyPhoneOtp,
     signInWithGoogle,
     resetPasswordForEmail,
     updatePasswordAndUnlock,

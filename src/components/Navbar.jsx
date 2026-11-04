@@ -84,7 +84,7 @@ export default function Navbar() {
                 </Badge>
               )}
               <span className="text-xs text-muted-foreground hidden sm:inline max-w-[130px] truncate">
-                {profile?.full_name || user.email}
+                {profile?.full_name || profile?.phone || user.phone || user.email}
               </span>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 Logout
