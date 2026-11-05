@@ -204,7 +204,7 @@ export default function PostJob() {
             <div className="pt-2 flex flex-wrap gap-2">
               <Link to="/dashboard">
                 <Button variant="outline" size="sm" className="h-8 text-xs font-semibold">
-                  &larr; Back to Dashboard
+                  ← Back to Dashboard
                 </Button>
               </Link>
               <Link to="/dashboard/credits">
@@ -422,7 +422,7 @@ export default function PostJob() {
 
               <div className="pt-2 flex flex-col sm:flex-row gap-3">
                 <Button type="submit" className="h-11 flex-1 font-semibold text-sm shadow-md shadow-primary/20" disabled={loading}>
-                  {loading ? "Publishing Job..." : "Publish Job Opening &rarr;"}
+                  {loading ? "Publishing Job..." : "Publish Job Opening →"}
                 </Button>
                 <Link to="/dashboard/my-jobs">
                   <Button type="button" variant="outline" className="h-11 w-full sm:w-auto text-xs">

@@ -11,6 +11,7 @@ import SavedJobs from "@/pages/SavedJobs"
 import MyApplications from "@/pages/MyApplications"
 import JobApplicants from "@/pages/JobApplicants"
 import RecruiterCredits from "@/pages/RecruiterCredits"
+import ContactUs from "@/pages/ContactUs"
 import Login from "@/pages/Login"
 import Signup from "@/pages/Signup"
 import ForgotPassword from "@/pages/ForgotPassword"
@@ -36,6 +37,10 @@ const router = createBrowserRouter([
       {
         path: "jobs/:id",
         element: <JobDetails />,
+      },
+      {
+        path: "contact",
+        element: <ContactUs />,
       },
       {
         path: "saved",

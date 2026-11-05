@@ -92,14 +92,13 @@ serve(async (req) => {
       )
     }
 
-    // 3. Dispatch transactional email via Brevo REST API (Plain-Text Only)
     const emailSubject = `Congratulations! You have been selected for ${job_title}`
-    const textContent = `Dear ${full_name || "Candidate"},\n\nWe are pleased to inform you that you have been selected for the position of ${job_title} at ${company_name || "the company"}.\n\nPlease check your JobPortal dashboard for next steps.\n\nBest regards,\n${company_name || "Hiring Team"}`
+    const textContent = `Dear ${full_name || "Candidate"},\n\nWe are pleased to inform you that you have been selected for the position of ${job_title} at ${company_name || "the company"}.\n\nPlease check your Job Pe Charcha dashboard for next steps.\n\nBest regards,\n${company_name || "Hiring Team"}`
 
     const brevoPayload = {
       sender: {
         email: brevoSenderEmail,
-        name: company_name || "JobPortal Hiring Team",
+        name: company_name || "Job Pe Charcha Hiring Team",
       },
       to: [
         {

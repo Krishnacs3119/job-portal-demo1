@@ -17,7 +17,7 @@ export default function Navbar() {
   const navLinkClass = ({ isActive }) =>
     `text-sm font-medium transition-colors hover:text-primary ${
       isActive
-        ? "text-primary font-semibold relative after:absolute after:-bottom-[18px] after:left-0 after:right-0 after:h-0.5 after:bg-primary after:rounded-full"
+        ? "text-primary font-semibold relative after:absolute after:-bottom-6 after:left-0 after:right-0 after:h-0.5 after:bg-primary after:rounded-full"
         : "text-muted-foreground"
     }`
 
@@ -49,18 +49,17 @@ export default function Navbar() {
 
   return (
     <header className="border-b bg-background/90 backdrop-blur-md sticky top-0 z-50 transition-colors">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6">
+      <div className="container mx-auto flex h-20 items-center justify-between px-4 sm:px-6">
         <Link
           to="/"
-          className="flex items-center gap-2.5 text-xl font-extrabold tracking-tight group"
+          className="flex items-center gap-2 group py-1"
           onClick={() => setMobileMenuOpen(false)}
         >
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-primary to-blue-500 flex items-center justify-center text-primary-foreground shadow-sm shadow-primary/30 group-hover:scale-105 transition-transform duration-200">
-            <Briefcase className="h-5 w-5" />
-          </div>
-          <span className="font-heading bg-gradient-to-r from-foreground via-foreground to-foreground/80 bg-clip-text text-foreground">
-            Job<span className="text-primary">Portal</span>
-          </span>
+          <img
+            src="/logo.png"
+            alt="Job Pe Charcha"
+            className="h-12 sm:h-14 md:h-16 w-auto object-contain transition-transform group-hover:scale-105"
+          />
         </Link>
 
         <nav className="hidden md:flex items-center space-x-6">
@@ -69,6 +68,9 @@ export default function Navbar() {
           </NavLink>
           <NavLink to="/jobs" className={navLinkClass}>
             Jobs
+          </NavLink>
+          <NavLink to="/contact" className={navLinkClass}>
+            Contact Us
           </NavLink>
 
           {user && role === "candidate" && (
@@ -174,7 +176,7 @@ export default function Navbar() {
             animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, height: "auto" }}
             exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden border-b bg-background/98 backdrop-blur-lg px-4 pt-2 pb-6 space-y-3 overflow-hidden shadow-lg"
+            className="md:hidden border-b bg-background/98 backdrop-blur-lg px-4 pt-2 pb-6 space-y-3 max-h-[calc(100vh-5rem)] overflow-y-auto shadow-lg"
           >
             {user && (
               <div className="flex items-center justify-between pb-3 border-b px-1">
@@ -203,6 +205,9 @@ export default function Navbar() {
               </NavLink>
               <NavLink to="/jobs" className={mobileNavLinkClass} onClick={() => setMobileMenuOpen(false)}>
                 Explore Jobs
+              </NavLink>
+              <NavLink to="/contact" className={mobileNavLinkClass} onClick={() => setMobileMenuOpen(false)}>
+                Contact Us
               </NavLink>
 
               {user && role === "candidate" && (

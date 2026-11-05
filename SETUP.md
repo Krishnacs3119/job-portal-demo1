@@ -36,6 +36,7 @@ Execute the migration scripts in the **exact numerical order** listed below. Cop
 | **14** | `supabase/migrations/20261030000013_fix_company_update_permissions_trigger.sql` | Fixed company ownership deletion cascade trigger |
 | **15** | `supabase/migrations/20261030000014_fix_application_visibility_for_recruiters.sql` | Recruiter application visibility and company membership hierarchy |
 | **16** | `supabase/migrations/20261030000015_credit_requests.sql` | Credit packages, recruiter credit requests workflow, and admin approval RPC |
+| **17** | `supabase/migrations/20261030000016_credit_payment_proof.sql` | Screenshot proof uploads, payment_proofs storage bucket, and request_credits RPC update |
 
 > [!NOTE]
 > All migrations are idempotent and follow the strict security rule (`search_path = public, auth`, `auth.uid()`, and `is_admin()`).
@@ -45,9 +46,9 @@ Execute the migration scripts in the **exact numerical order** listed below. Cop
 ## 3. Storage Bucket Verification
 
 Check **Storage** in the Supabase Dashboard:
-- Ensure the `resumes` bucket is created.
-- Ensure the bucket is marked **Private** (public downloads disabled).
-- RLS policies on `storage.objects` created in migration 04 ensure candidates can only access their own user directory (`{userId}/*`), while verified recruiters can only read resumes for candidates who applied to their jobs.
+- Ensure the `resumes` bucket is created and marked **Private** (public downloads disabled).
+- Ensure the `payment_proofs` bucket is created and marked **Private** (max 5MB, image formats only).
+- RLS policies on `storage.objects` ensure candidates only access their own user directory, recruiters only access applicant resumes, and payment proofs are strictly visible only to company members and administrators.
 
 ---
 
@@ -164,7 +165,7 @@ WHERE email = 'admin@yourdomain.com';
 
 To run verification tests:
 1. Create a separate **Staging/Test** Supabase project.
-2. Apply the 16 migrations to the staging project.
+2. Apply the 17 migrations to the staging project.
 3. In your local `.env`, point `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to the staging project.
 4. Add your staging admin credentials to `.env`:
    ```env
@@ -184,7 +185,7 @@ To run verification tests:
 
 ## 10. Production Go-Live Checklist
 
-- [ ] All 16 database migrations applied successfully in order without errors.
+- [ ] All 17 database migrations applied successfully in order without errors.
 - [ ] Edge Functions (`login`, `unlock`, `send-selection-email`) deployed and tested.
 - [ ] `REQUIRE_CAPTCHA="true"` set in Edge Function secrets.
 - [ ] `TURNSTILE_SECRET_KEY` and `VITE_TURNSTILE_SITE_KEY` configured.

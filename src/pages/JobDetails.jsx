@@ -263,7 +263,7 @@ export default function JobDetails() {
           <AlertDescription>{errorMsg || "Job posting could not be found."}</AlertDescription>
         </Alert>
         <Link to="/jobs">
-          <Button variant="outline">&larr; Back to All Jobs</Button>
+          <Button variant="outline">← Back to All Jobs</Button>
         </Link>
       </div>
     )
@@ -279,7 +279,7 @@ export default function JobDetails() {
           to="/jobs"
           className="inline-flex items-center text-xs sm:text-sm text-muted-foreground hover:text-foreground font-medium transition-colors"
         >
-          &larr; Back to all job openings
+          ← Back to all job openings
         </Link>
       </div>
 
@@ -448,7 +448,7 @@ export default function JobDetails() {
                       onClick={() => setShowApplyModal(true)}
                       className="shadow-md shadow-primary/25 h-11 px-8 font-semibold"
                     >
-                      Apply Now for this Position &rarr;
+                      Apply Now for this Position →
                     </Button>
                   </div>
                 )
@@ -486,7 +486,7 @@ export default function JobDetails() {
                 </p>
               ) : (
                 <p className="text-xs text-muted-foreground">
-                  Verified employer registered on JobPortal network.
+                  Verified employer registered on Job Pe Charcha network.
                 </p>
               )}
 

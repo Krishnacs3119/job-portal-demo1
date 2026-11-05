@@ -275,12 +275,12 @@ export default function JobApplicants() {
                     Confirm Decision: {pendingAction.applicantName}
                   </h3>
                   <p className="text-xs text-muted-foreground">
-                    Transition status from <span className="uppercase font-semibold text-foreground">{pendingAction.currentStatus}</span> &rarr;{" "}
+                    Transition status from <span className="uppercase font-semibold text-foreground">{pendingAction.currentStatus}</span> →{" "}
                     <span className="uppercase font-bold text-primary">{pendingAction.targetStatus}</span>
                   </p>
                 </div>
                 <Badge className={`uppercase text-xs font-bold ${statusBadgeVariants[pendingAction.targetStatus] || ""}`}>
-                  &rarr; {pendingAction.targetStatus}
+                  → {pendingAction.targetStatus}
                 </Badge>
               </div>
 
@@ -561,7 +561,7 @@ export default function JobApplicants() {
                                     <span className="font-medium text-foreground">
                                       {item.from_status ? (
                                         <>
-                                          <span className="uppercase">{item.from_status}</span> &rarr;{" "}
+                                          <span className="uppercase">{item.from_status}</span> →{" "}
                                           <span className="uppercase font-bold text-primary">{item.to_status}</span>
                                         </>
                                       ) : (

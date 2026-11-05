@@ -193,7 +193,7 @@ export default function SavedJobs() {
                       </Button>
                       <Link to={`/jobs/${job.id}`}>
                         <Button size="sm" className="h-8 text-xs font-semibold shadow-xs">
-                          View & Apply &rarr;
+                          View & Apply →
                         </Button>
                       </Link>
                     </div>

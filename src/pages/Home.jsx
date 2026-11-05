@@ -93,25 +93,24 @@ export default function Home() {
   ]
 
   return (
-    <PageTransition className="space-y-16 sm:space-y-24 py-4 sm:py-8">
-      {/* Hero Section */}
+    <PageTransition className="space-y-16 sm:space-y-24 py-4 sm:py-8 px-4 sm:px-6">
       <section className="relative overflow-hidden pt-4 pb-8 sm:py-12 text-center max-w-4xl mx-auto space-y-6">
-        <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3.5 py-1.5 text-xs sm:text-sm font-medium text-primary shadow-sm backdrop-blur-sm">
-          <Sparkles className="h-4 w-4 animate-pulse text-primary" />
-          <span>India&apos;s Verified Tech Opportunity Network</span>
-          <span className="hidden sm:inline text-muted-foreground">&bull;</span>
+        <div className="inline-flex items-center gap-2 rounded-full border border-brand-orange/30 bg-brand-orange/10 px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-brand-orange shadow-sm backdrop-blur-sm">
+          <Sparkles className="h-4 w-4 animate-pulse text-brand-orange" />
+          <span>JOBS | CAREER | OPPORTUNITIES</span>
+          <span className="hidden sm:inline text-muted-foreground">•</span>
           <span className="hidden sm:inline text-muted-foreground">Zero Ghosting Policy</span>
         </div>
 
-        <h1 className="font-heading text-4xl sm:text-6xl font-extrabold tracking-tight text-foreground leading-[1.12]">
+        <h1 className="font-heading text-2xl sm:text-4xl md:text-6xl font-extrabold tracking-tight text-foreground leading-tight pb-1">
           Connecting Ambitious Talent With{" "}
-          <span className="bg-gradient-to-r from-primary via-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            Transparent Tech Roles
+          <span className="inline-block pb-1 leading-snug break-words bg-gradient-to-r from-primary via-blue-800 to-brand-orange bg-clip-text text-transparent">
+            Transparent Career Roles
           </span>
         </h1>
 
         <p className="text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          Skip outdated job boards. Explore verified positions across India, submit direct applications, and track your recruitment timeline in real time.
+          Skip outdated job portals. Explore verified positions across India on Job Pe Charcha, submit direct applications, and track your recruitment timeline in real time.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
@@ -130,7 +129,6 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Hero Feature Highlights */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-8 text-left">
           {[
             { label: "100% Verified", sub: "Approved employers" },
@@ -149,7 +147,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Jobs Section */}
       <section className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
           <div>
@@ -211,7 +208,7 @@ export default function Home() {
                         <Link to={`/jobs/${job.id}`}>{job.title}</Link>
                       </h3>
                       <p className="text-xs font-medium text-muted-foreground mt-0.5">
-                        {job.company?.name} &bull; 📍 {job.location}
+                        {job.company?.name} • 📍 {job.location}
                       </p>
                     </div>
 
@@ -229,7 +226,7 @@ export default function Home() {
                     </span>
                     <Link to={`/jobs/${job.id}`}>
                       <Button size="sm" variant="outline" className="h-8 text-xs">
-                        Details &rarr;
+                        Details →
                       </Button>
                     </Link>
                   </div>
@@ -240,14 +237,13 @@ export default function Home() {
         )}
       </section>
 
-      {/* How It Works Section */}
       <section className="space-y-10">
         <div className="text-center max-w-xl mx-auto space-y-2">
           <Badge variant="outline" className="text-primary border-primary/20">
             Simple & Transparent
           </Badge>
           <h2 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight">
-            How JobPortal Works
+            How Job Pe Charcha Works
           </h2>
           <p className="text-sm text-muted-foreground">
             A frictionless experience built for both job seekers and hiring teams in modern tech.
@@ -255,7 +251,6 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* For Candidates */}
           <div className="p-6 sm:p-8 rounded-2xl border bg-card/60 backdrop-blur-sm space-y-6">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-600  flex items-center justify-center font-bold">
@@ -283,12 +278,11 @@ export default function Home() {
 
             <Link to="/jobs" className="block pt-2">
               <Button variant="outline" className="w-full text-xs">
-                Browse Candidates Roles &rarr;
+                Browse Candidates Roles →
               </Button>
             </Link>
           </div>
 
-          {/* For Recruiters */}
           <div className="p-6 sm:p-8 rounded-2xl border bg-card/60 backdrop-blur-sm space-y-6">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-600  flex items-center justify-center font-bold">
@@ -316,14 +310,13 @@ export default function Home() {
 
             <Link to="/company/setup" className="block pt-2">
               <Button variant="outline" className="w-full text-xs">
-                Register Your Company &rarr;
+                Register Your Company →
               </Button>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Trust & CTA Section */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 p-8 sm:p-12 text-center space-y-6">
         <div className="h-12 w-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center mx-auto shadow-lg shadow-primary/30">
           <ShieldCheck className="h-6 w-6" />

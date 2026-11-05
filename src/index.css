@@ -5,34 +5,33 @@
 @layer base {
   :root {
     color-scheme: light;
-    --background: 220 25% 97.5%;
-    --foreground: 222.2 47% 11.2%;
+    --background: 218 28% 98%;
+    --foreground: 216 65% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 47% 11.2%;
+    --card-foreground: 216 65% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47% 11.2%;
+    --popover-foreground: 216 65% 12%;
 
-    /* Modern Vibrant Tech Indigo */
-    --primary: 224 82% 56%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 215 86% 20%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 20% 93%;
-    --secondary-foreground: 222.2 47% 11.2%;
+    --secondary: 27 100% 47%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 18% 92%;
-    --muted-foreground: 218 14% 45%;
+    --muted: 216 22% 93%;
+    --muted-foreground: 216 16% 44%;
 
-    --accent: 224 80% 96%;
-    --accent-foreground: 224 82% 50%;
+    --accent: 27 100% 96%;
+    --accent-foreground: 27 100% 42%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 220 16% 89%;
-    --input: 220 16% 87%;
-    --ring: 224 82% 56%;
+    --border: 216 20% 88%;
+    --input: 216 20% 86%;
+    --ring: 215 86% 20%;
 
     --radius: 0.75rem;
   }
@@ -47,13 +46,11 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
   
-  /* Focus rings for keyboard accessibility */
   :focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 }
 
-/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,

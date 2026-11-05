@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { Link } from "react-router-dom"
-import { Coins, Zap, Shield, CheckCircle2, Clock, XCircle, ArrowLeft, AlertCircle, CreditCard, Sparkles, Building2 } from "lucide-react"
+import { Coins, Shield, CheckCircle2, XCircle, ArrowLeft, AlertCircle, Sparkles, Building2, Copy, Check, UploadCloud, Clock, Eye, Trash2 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { useAuth } from "@/context/AuthContext"
 import { Button } from "@/components/ui/button"
@@ -22,9 +22,17 @@ export default function RecruiterCredits() {
   const [requests, setRequests] = useState([])
   const [selectedPack, setSelectedPack] = useState(null)
   const [paymentRef, setPaymentRef] = useState("")
+  const [screenshotFile, setScreenshotFile] = useState(null)
+  const [screenshotPreview, setScreenshotPreview] = useState(null)
+  const [copiedUpi, setCopiedUpi] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [submitStatusText, setSubmitStatusText] = useState("")
   const [errorMsg, setErrorMsg] = useState("")
   const [successMsg, setSuccessMsg] = useState("")
+  const [previewModalUrl, setPreviewModalUrl] = useState(null)
+
+  const upiId = "payments@jobportal.in"
+  const payeeName = "Job Pe Charcha Technologies Pvt Ltd"
 
   const loadData = useCallback(async () => {
     try {
@@ -60,6 +68,7 @@ export default function RecruiterCredits() {
             credits,
             price_inr,
             payment_reference,
+            screenshot_url,
             status,
             admin_note,
             created_at,
@@ -125,12 +134,68 @@ export default function RecruiterCredits() {
     setSuccessMsg("")
     setSelectedPack(pack)
     setPaymentRef("")
+    setScreenshotFile(null)
+    setScreenshotPreview(null)
+    setCopiedUpi(false)
   }
 
   const handleCloseModal = () => {
     if (submitting) return
     setSelectedPack(null)
     setPaymentRef("")
+    if (screenshotPreview) {
+      URL.revokeObjectURL(screenshotPreview)
+    }
+    setScreenshotFile(null)
+    setScreenshotPreview(null)
+    setCopiedUpi(false)
+  }
+
+  const handleCopyUpi = async () => {
+    try {
+      await navigator.clipboard.writeText(upiId)
+      setCopiedUpi(true)
+      setTimeout(() => setCopiedUpi(false), 2000)
+    } catch (_) {
+      const el = document.createElement("textarea")
+      el.value = upiId
+      document.body.appendChild(el)
+      el.select()
+      document.execCommand("copy")
+      document.body.removeChild(el)
+      setCopiedUpi(true)
+      setTimeout(() => setCopiedUpi(false), 2000)
+    }
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith("image/")) {
+      setErrorMsg("Please upload a valid image file (PNG, JPG, JPEG, WEBP).")
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMsg("Screenshot file size must be less than 5MB.")
+      return
+    }
+
+    setErrorMsg("")
+    if (screenshotPreview) {
+      URL.revokeObjectURL(screenshotPreview)
+    }
+    setScreenshotFile(file)
+    setScreenshotPreview(URL.createObjectURL(file))
+  }
+
+  const handleRemoveScreenshot = () => {
+    if (screenshotPreview) {
+      URL.revokeObjectURL(screenshotPreview)
+    }
+    setScreenshotFile(null)
+    setScreenshotPreview(null)
   }
 
   const handleSubmitRequest = async (e) => {
@@ -147,22 +212,63 @@ export default function RecruiterCredits() {
       setSubmitting(true)
       setErrorMsg("")
 
-      const { data, error } = await supabase.rpc("request_credits", {
+      let uploadedScreenshotPath = null
+
+      if (screenshotFile) {
+        setSubmitStatusText("Uploading payment proof...")
+        const fileExt = screenshotFile.name.split(".").pop().toLowerCase()
+        const randomId = Math.random().toString(36).substring(2, 9)
+        const filePath = `${user.id}/${Date.now()}_${randomId}.${fileExt}`
+
+        const { error: uploadErr } = await supabase.storage
+          .from("payment_proofs")
+          .upload(filePath, screenshotFile, {
+            contentType: screenshotFile.type,
+            upsert: false,
+          })
+
+        if (uploadErr) {
+          throw new Error(`Failed to upload payment screenshot: ${uploadErr.message}`)
+        }
+
+        uploadedScreenshotPath = filePath
+      }
+
+      setSubmitStatusText("Submitting credit request...")
+
+      const { error } = await supabase.rpc("request_credits", {
         p_company_id: company.id,
         p_pack_id: selectedPack.id,
         p_payment_reference: cleanRef,
+        p_screenshot_url: uploadedScreenshotPath,
       })
 
       if (error) throw error
 
-      setSuccessMsg(`Your request for ${selectedPack.credits} credits has been submitted. Our team will verify the payment reference shortly.`)
-      setSelectedPack(null)
-      setPaymentRef("")
+      setSuccessMsg(`Your request for ${selectedPack.credits} credits has been submitted. Credits will be added within 24 hours after admin verification.`)
+      handleCloseModal()
       await loadData()
     } catch (err) {
       setErrorMsg(err.message || "Failed to submit credit request.")
     } finally {
       setSubmitting(false)
+      setSubmitStatusText("")
+    }
+  }
+
+  const handleOpenProofPreview = async (path) => {
+    if (!path) return
+    try {
+      const { data, error } = await supabase.storage
+        .from("payment_proofs")
+        .createSignedUrl(path, 3600)
+
+      if (error) throw error
+      if (data?.signedUrl) {
+        setPreviewModalUrl(data.signedUrl)
+      }
+    } catch (err) {
+      setErrorMsg(err.message || "Unable to open screenshot preview.")
     }
   }
 
@@ -210,6 +316,14 @@ export default function RecruiterCredits() {
 
   const applicationsCovered = balance !== null ? Math.floor(balance / 10) : 0
   const isApproved = company?.verification_status === "approved"
+
+  const upiDeepLink = selectedPack
+    ? `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(payeeName)}&am=${selectedPack.price_inr}&cu=INR&tn=${encodeURIComponent(`CreditPack-${selectedPack.name}`)}`
+    : ""
+
+  const qrImageUrl = selectedPack
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiDeepLink)}`
+    : ""
 
   return (
     <PageTransition className="max-w-5xl mx-auto py-6 sm:py-8 space-y-8">
@@ -442,6 +556,7 @@ export default function RecruiterCredits() {
                     <th className="py-2.5 px-3 text-left">Credits</th>
                     <th className="py-2.5 px-3 text-left">Amount</th>
                     <th className="py-2.5 px-3 text-left">Payment Ref</th>
+                    <th className="py-2.5 px-3 text-left">Proof</th>
                     <th className="py-2.5 px-3 text-left">Status</th>
                     <th className="py-2.5 px-3 text-left">Admin Note</th>
                   </tr>
@@ -471,6 +586,21 @@ export default function RecruiterCredits() {
                         {req.payment_reference}
                       </td>
                       <td className="py-2.5 px-3 whitespace-nowrap">
+                        {req.screenshot_url ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleOpenProofPreview(req.screenshot_url)}
+                            className="h-6 text-[11px] px-2 text-primary hover:text-primary gap-1"
+                          >
+                            <Eye className="h-3 w-3" /> View
+                          </Button>
+                        ) : (
+                          <span className="text-muted-foreground text-[10px]">None</span>
+                        )}
+                      </td>
+                      <td className="py-2.5 px-3 whitespace-nowrap">
                         {req.status === "approved" ? (
                           <Badge className="bg-emerald-600/15 text-emerald-700 border border-emerald-600/30 text-[10px] font-bold">
                             Approved
@@ -498,12 +628,12 @@ export default function RecruiterCredits() {
       </Card>
 
       {selectedPack && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-background border rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-6 border-b space-y-1 bg-muted/20">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-background border rounded-2xl shadow-2xl max-w-md w-full overflow-hidden my-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-5 border-b space-y-1 bg-muted/20">
               <div className="flex items-center justify-between">
                 <Badge variant="outline" className="text-xs font-bold uppercase tracking-wider text-primary">
-                  Offline Payment Request
+                  UPI Payment & Verification
                 </Badge>
                 <button
                   type="button"
@@ -514,30 +644,73 @@ export default function RecruiterCredits() {
                   &#x2715;
                 </button>
               </div>
-              <h3 className="text-xl font-heading font-extrabold text-foreground">
+              <h3 className="text-lg font-heading font-extrabold text-foreground">
                 Request {selectedPack.credits} Credits ({selectedPack.name})
               </h3>
               <p className="text-xs text-muted-foreground">
-                Total Payable Amount: <strong className="text-foreground">&#8377;{selectedPack.price_inr.toLocaleString("en-IN")}</strong>
+                Payable Amount: <strong className="text-foreground">&#8377;{selectedPack.price_inr.toLocaleString("en-IN")}</strong>
               </p>
             </div>
 
-            <form onSubmit={handleSubmitRequest} className="p-6 space-y-4">
-              <div className="bg-muted/40 border rounded-xl p-3.5 space-y-2 text-xs">
-                <div className="font-semibold text-foreground flex items-center gap-1.5">
-                  <CreditCard className="h-4 w-4 text-primary" />
-                  <span>Transfer & Payment Details</span>
+            <form onSubmit={handleSubmitRequest} className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+              <div className="bg-muted/40 border rounded-xl p-4 text-center space-y-3">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary font-bold text-sm">
+                  <span>Pay &#8377;{selectedPack.price_inr.toLocaleString("en-IN")}</span>
                 </div>
-                <p className="text-muted-foreground leading-relaxed">
-                  Please transfer <strong className="text-foreground">&#8377;{selectedPack.price_inr.toLocaleString("en-IN")}</strong> via UPI or NEFT/IMPS:
-                </p>
-                <div className="bg-background border rounded-lg p-2.5 font-mono text-[11px] space-y-1">
-                  <div><strong>UPI ID:</strong> payments@jobportal.in</div>
-                  <div><strong>Account Name:</strong> JobPortal Technologies Pvt Ltd</div>
+
+                <div className="flex flex-col items-center justify-center pt-1">
+                  <div className="p-2 bg-white rounded-xl shadow-md border inline-block">
+                    <img
+                      src={qrImageUrl}
+                      alt={`UPI QR Code for ${selectedPack.name}`}
+                      className="w-44 h-44 object-contain rounded-lg"
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-2 font-medium">
+                    Scan with GPay, PhonePe, Paytm, or any UPI app
+                  </p>
                 </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Once payment is completed, submit the transaction UTR or reference ID below. The administrator will credit your account after verification.
-                </p>
+
+                <div className="bg-background border rounded-xl p-3 text-xs space-y-2 text-left">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <div className="text-[10px] text-muted-foreground uppercase font-semibold">UPI ID</div>
+                      <div className="font-mono font-bold text-foreground text-xs">{upiId}</div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCopyUpi}
+                      className="h-7 px-2.5 text-[11px] gap-1 font-semibold"
+                    >
+                      {copiedUpi ? (
+                        <>
+                          <Check className="h-3 w-3 text-emerald-600" />
+                          <span className="text-emerald-600">Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3 w-3" />
+                          <span>Copy</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  <div className="border-t pt-1.5">
+                    <div className="text-[10px] text-muted-foreground uppercase font-semibold">Account Name</div>
+                    <div className="font-semibold text-foreground text-xs">{payeeName}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-950 text-xs">
+                <Clock className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                <div className="leading-relaxed">
+                  <span className="font-semibold text-blue-900">24-Hour Verification: </span>
+                  Credits will be credited to your account within 24 hours once payment is verified by the admin.
+                </div>
               </div>
 
               <div className="space-y-1.5">
@@ -546,7 +719,7 @@ export default function RecruiterCredits() {
                 </Label>
                 <Input
                   id="payment_ref"
-                  placeholder="e.g. UTR1234567890 or PAY_123456"
+                  placeholder="e.g. 12-digit UTR number or UPI ref"
                   value={paymentRef}
                   onChange={(e) => setPaymentRef(e.target.value)}
                   required
@@ -556,8 +729,53 @@ export default function RecruiterCredits() {
                   className="font-mono text-xs"
                 />
                 <p className="text-[10px] text-muted-foreground">
-                  Must be between 6 and 40 characters and unique.
+                  Found in your UPI payment receipt (typically 12 digits).
                 </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">
+                  Payment Screenshot / Receipt (Proof)
+                </Label>
+
+                {screenshotPreview ? (
+                  <div className="relative border rounded-xl p-2 bg-muted/20 flex items-center gap-3">
+                    <img
+                      src={screenshotPreview}
+                      alt="Proof Preview"
+                      className="h-16 w-16 object-cover rounded-lg border bg-background"
+                    />
+                    <div className="flex-1 min-w-0 text-xs space-y-0.5">
+                      <p className="font-medium text-foreground truncate">{screenshotFile?.name}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {screenshotFile?.size ? (screenshotFile.size / 1024).toFixed(1) + " KB" : ""}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleRemoveScreenshot}
+                      disabled={submitting}
+                      className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <label className="border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 rounded-xl p-4 flex flex-col items-center justify-center gap-1.5 cursor-pointer bg-muted/10 hover:bg-muted/20 transition-colors">
+                    <UploadCloud className="h-6 w-6 text-muted-foreground" />
+                    <span className="text-xs font-semibold text-foreground">Click to upload screenshot</span>
+                    <span className="text-[10px] text-muted-foreground">PNG, JPG, JPEG up to 5MB</span>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      onChange={handleFileChange}
+                      disabled={submitting}
+                      className="hidden"
+                    />
+                  </label>
+                )}
               </div>
 
               <div className="pt-2 flex items-center justify-end gap-2 border-t">
@@ -577,10 +795,47 @@ export default function RecruiterCredits() {
                   disabled={submitting || paymentRef.trim().length < 6}
                   className="text-xs font-semibold gap-1.5"
                 >
-                  {submitting ? "Submitting..." : "Submit Credit Request"}
+                  {submitting ? (submitStatusText || "Submitting...") : "Submit Credit Request"}
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {previewModalUrl && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-background border rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-4 border-b flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Payment Screenshot
+              </span>
+              <button
+                type="button"
+                onClick={() => setPreviewModalUrl(null)}
+                className="text-muted-foreground hover:text-foreground p-1 text-sm rounded-lg"
+              >
+                &#x2715;
+              </button>
+            </div>
+            <div className="p-4 flex items-center justify-center bg-muted/20 max-h-[70vh] overflow-auto">
+              <img
+                src={previewModalUrl}
+                alt="Payment proof"
+                className="max-h-[60vh] max-w-full rounded-lg object-contain shadow-sm border"
+              />
+            </div>
+            <div className="p-3 border-t flex justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setPreviewModalUrl(null)}
+                className="text-xs"
+              >
+                Close
+              </Button>
+            </div>
           </div>
         </div>
       )}

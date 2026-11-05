@@ -508,7 +508,7 @@ export default function Jobs() {
                         )}
                         <Link to={`/jobs/${job.id}`}>
                           <Button size="sm" className="h-8 text-xs font-semibold shadow-sm">
-                            View Details &rarr;
+                            View Details →
                           </Button>
                         </Link>
                       </div>
@@ -521,7 +521,6 @@ export default function Jobs() {
         </motion.div>
       )}
 
-      {/* Pagination Controls */}
       {totalPages > 1 && (
         <div className="flex justify-center items-center gap-2 pt-6">
           <Button
@@ -534,7 +533,7 @@ export default function Jobs() {
             disabled={page === 1 || loading}
             className="text-xs h-8"
           >
-            &larr; Previous
+            ← Previous
           </Button>
           <span className="text-xs font-medium text-muted-foreground px-2">
             Page {page} of {totalPages}
@@ -549,7 +548,7 @@ export default function Jobs() {
             disabled={page === totalPages || loading}
             className="text-xs h-8"
           >
-            Next &rarr;
+            Next →
           </Button>
         </div>
       )}

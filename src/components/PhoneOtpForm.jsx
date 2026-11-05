@@ -144,7 +144,7 @@ export default function PhoneOtpForm({ mode = "login" }) {
         <div className="text-center space-y-1">
           <h3 className="text-lg font-semibold">Select Your Role</h3>
           <p className="text-xs text-muted-foreground">
-            Welcome! Choose how you will use the job portal to finish setup.
+            Welcome! Choose how you will use Job Pe Charcha to finish setup.
           </p>
         </div>
 

@@ -44,7 +44,12 @@ export default function ForgotPassword() {
   }
 
   return (
-    <PageTransition className="max-w-md mx-auto py-8 sm:py-12">
+    <PageTransition className="max-w-md mx-auto py-8 sm:py-12 space-y-4">
+      <div className="flex justify-center">
+        <Link to="/" className="inline-block group">
+          <img src="/logo.png" alt="Job Pe Charcha" className="h-14 sm:h-16 md:h-20 w-auto object-contain mx-auto transition-transform group-hover:scale-105" />
+        </Link>
+      </div>
       <Card className="shadow-lg border bg-card/95 backdrop-blur-sm">
         <CardHeader className="space-y-1.5 text-center pb-4">
           <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-1">
@@ -90,7 +95,7 @@ export default function ForgotPassword() {
             </div>
 
             <Button type="submit" className="w-full h-10 text-sm font-semibold shadow-md shadow-primary/20" disabled={loading}>
-              {loading ? "Sending reset link..." : "Send Reset Link &rarr;"}
+              {loading ? "Sending reset link..." : "Send Reset Link →"}
             </Button>
           </form>
         </CardContent>

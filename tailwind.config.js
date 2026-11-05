@@ -1,4 +1,3 @@
-/** @type {import('tailwindcss').Config} */
 export default {
   content: [
     "./index.html",
@@ -54,6 +53,20 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        brand: {
+          navy: {
+            DEFAULT: "#072B5E",
+            accent: "#0A3D82",
+            dark: "#041836",
+            light: "#0e4a9e",
+          },
+          orange: {
+            DEFAULT: "#F26E00",
+            hover: "#D95F00",
+            vibrant: "#FF7B00",
+            light: "#FFF4EB",
+          },
         },
       },
       borderRadius: {

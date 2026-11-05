@@ -12,7 +12,8 @@ import {
   Search,
   ExternalLink,
   ShieldCheck,
-  CreditCard
+  CreditCard,
+  Eye
 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
@@ -55,6 +56,7 @@ export default function AdminDashboard() {
   const [requestsFilter, setRequestsFilter] = useState("all")
   const [confirmResolveRequest, setConfirmResolveRequest] = useState(null)
   const [resolveLoading, setResolveLoading] = useState(false)
+  const [previewScreenshotUrl, setPreviewScreenshotUrl] = useState(null)
 
   const [ledgerEntries, setLedgerEntries] = useState([])
   const [loadingLedger, setLoadingLedger] = useState(false)
@@ -192,6 +194,7 @@ export default function AdminDashboard() {
             credits,
             price_inr,
             payment_reference,
+            screenshot_url,
             status,
             admin_note,
             resolved_by,
@@ -410,6 +413,22 @@ export default function AdminDashboard() {
       setConfirmResolveRequest(null)
     } finally {
       setResolveLoading(false)
+    }
+  }
+
+  const handleViewScreenshot = async (path) => {
+    if (!path) return
+    try {
+      const { data, error } = await supabase.storage
+        .from("payment_proofs")
+        .createSignedUrl(path, 3600)
+
+      if (error) throw error
+      if (data?.signedUrl) {
+        setPreviewScreenshotUrl(data.signedUrl)
+      }
+    } catch (err) {
+      setErrorMsg(err.message || "Unable to generate preview URL for payment proof.")
     }
   }
 
@@ -635,7 +654,7 @@ export default function AdminDashboard() {
                               setVerificationFilter("pending")
                             }}
                           >
-                            Review &rarr;
+                            Review →
                           </Button>
                         </div>
                       ))}
@@ -908,6 +927,7 @@ export default function AdminDashboard() {
                       <th className="py-2.5 px-3 text-left">Credits</th>
                       <th className="py-2.5 px-3 text-left">Amount</th>
                       <th className="py-2.5 px-3 text-left">Payment Ref</th>
+                      <th className="py-2.5 px-3 text-left">Proof</th>
                       <th className="py-2.5 px-3 text-left">Status</th>
                       <th className="py-2.5 px-3 text-left">Admin Note</th>
                       <th className="py-2.5 px-3 text-right">Actions</th>
@@ -943,6 +963,21 @@ export default function AdminDashboard() {
                         </td>
                         <td className="py-2.5 px-3 font-mono text-[11px] text-muted-foreground whitespace-nowrap">
                           {req.payment_reference}
+                        </td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">
+                          {req.screenshot_url ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleViewScreenshot(req.screenshot_url)}
+                              className="h-6 text-[11px] px-2 text-primary hover:text-primary gap-1 font-semibold"
+                            >
+                              <Eye className="h-3 w-3" /> View Proof
+                            </Button>
+                          ) : (
+                            <span className="text-muted-foreground text-[10px]">None</span>
+                          )}
                         </td>
                         <td className="py-2.5 px-3 whitespace-nowrap">
                           {req.status === "approved" ? (
@@ -1019,6 +1054,19 @@ export default function AdminDashboard() {
                       ? `Add ${confirmResolveRequest.request.credits} credits to ${confirmResolveRequest.request.companies?.name} (${confirmResolveRequest.request.owner_email})? Reference: ${confirmResolveRequest.request.payment_reference}`
                       : `Reject credit request for ${confirmResolveRequest.request.companies?.name} (${confirmResolveRequest.request.owner_email})?`}
                   </p>
+                  {confirmResolveRequest.request.screenshot_url && (
+                    <div className="pt-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewScreenshot(confirmResolveRequest.request.screenshot_url)}
+                        className="text-xs h-7 gap-1 font-semibold text-primary"
+                      >
+                        <Eye className="h-3 w-3" /> Inspect Payment Receipt
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">
@@ -1066,6 +1114,43 @@ export default function AdminDashboard() {
                   </Button>
                 </div>
               </Card>
+            </div>
+          )}
+
+          {previewScreenshotUrl && (
+            <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-background border rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="p-4 border-b flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Payment Proof Receipt
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewScreenshotUrl(null)}
+                    className="text-muted-foreground hover:text-foreground p-1 text-sm rounded-lg"
+                  >
+                    &#x2715;
+                  </button>
+                </div>
+                <div className="p-4 flex items-center justify-center bg-muted/20 max-h-[70vh] overflow-auto">
+                  <img
+                    src={previewScreenshotUrl}
+                    alt="Payment proof screenshot"
+                    className="max-h-[60vh] max-w-full rounded-lg object-contain shadow-sm border"
+                  />
+                </div>
+                <div className="p-3 border-t flex justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPreviewScreenshotUrl(null)}
+                    className="text-xs"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </Card>
@@ -1150,7 +1235,7 @@ export default function AdminDashboard() {
 
                 <Button type="submit" disabled={topupLoading} className="h-10 text-xs font-semibold gap-2 shadow-sm">
                   <Coins className="h-4 w-4" />
-                  {topupLoading ? "Allocating Credits..." : "Allocate Credits &rarr;"}
+                  {topupLoading ? "Allocating Credits..." : "Allocate Credits →"}
                 </Button>
               </form>
             </CardContent>

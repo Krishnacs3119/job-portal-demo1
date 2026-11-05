@@ -28,6 +28,8 @@ dist-ssr
 .env.local
 .env.*.local
 
+supabase/.temp/
+
 # Verification scripts (contain test credentials - never commit)
 scripts/
 scratch/

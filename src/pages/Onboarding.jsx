@@ -61,7 +61,7 @@ export default function Onboarding() {
           <ShieldCheck className="h-5 w-5" />
         </div>
         <h1 className="text-2xl sm:text-3xl font-heading font-extrabold tracking-tight text-foreground">
-          Welcome, {displayName}. How will you use JobPortal?
+          Welcome, {displayName}. How will you use Job Pe Charcha?
         </h1>
         <p className="text-xs sm:text-sm text-muted-foreground max-w-md mx-auto">
           Choose how you plan to use the platform. This selection sets your account permissions.
