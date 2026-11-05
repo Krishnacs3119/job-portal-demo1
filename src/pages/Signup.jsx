@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
+import { UserPlus, User, Mail, Sparkles, CheckCircle2 } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 import Turnstile from "@/components/Turnstile"
 import PhoneOtpForm from "@/components/PhoneOtpForm"
@@ -9,6 +10,7 @@ import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import PageTransition from "@/components/PageTransition"
 
 export default function Signup() {
   const { signUpWithPassword, signInWithGoogle } = useAuth()
@@ -83,19 +85,26 @@ export default function Signup() {
   }
 
   return (
-    <div className="max-w-md mx-auto py-8">
-      <Card>
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
-          <CardDescription>
-            Join to explore job opportunities or post company openings
+    <PageTransition className="max-w-md mx-auto py-6 sm:py-10">
+      <Card className="shadow-lg border bg-card/95 backdrop-blur-sm">
+        <CardHeader className="space-y-1.5 text-center pb-4">
+          <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-1">
+            <UserPlus className="h-5 w-5" />
+          </div>
+          <CardTitle className="text-2xl font-heading font-extrabold tracking-tight">
+            Create Free Account
+          </CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
+            Join to discover verified tech roles or post company openings
           </CardDescription>
 
-          <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1 mt-3">
+          <div className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1 mt-4">
             <button
               type="button"
-              className={`rounded-md py-1.5 text-xs font-medium transition-all ${
-                authMethod === "email" ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"
+              className={`rounded-lg py-2 text-xs font-semibold transition-all ${
+                authMethod === "email"
+                  ? "bg-background shadow-sm text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
               onClick={() => {
                 setAuthMethod("email")
@@ -107,8 +116,10 @@ export default function Signup() {
             </button>
             <button
               type="button"
-              className={`rounded-md py-1.5 text-xs font-medium transition-all ${
-                authMethod === "phone" ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"
+              className={`rounded-lg py-2 text-xs font-semibold transition-all ${
+                authMethod === "phone"
+                  ? "bg-background shadow-sm text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
               onClick={() => {
                 setAuthMethod("phone")
@@ -120,19 +131,21 @@ export default function Signup() {
             </button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+
+        <CardContent className="space-y-4 pt-2">
           {authMethod === "phone" ? (
             <PhoneOtpForm mode="signup" />
           ) : (
             <>
               {errorMsg && (
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="text-xs py-2.5">
                   <AlertDescription>{errorMsg}</AlertDescription>
                 </Alert>
               )}
 
               {successMsg && (
-                <Alert className="border-green-600 bg-green-50 text-green-900 dark:bg-green-950 dark:text-green-200">
+                <Alert className="border-emerald-500/40 bg-emerald-500/10 text-emerald-800  text-xs py-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 " />
                   <AlertDescription>{successMsg}</AlertDescription>
                 </Alert>
               )}
@@ -140,11 +153,11 @@ export default function Signup() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className="w-full h-10 text-xs font-semibold gap-2 hover:bg-muted/60 transition-colors"
                 onClick={handleGoogleSignup}
                 disabled={oauthLoading || loading}
               >
-                <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
                   <path
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                     fill="#4285F4"
@@ -164,44 +177,55 @@ export default function Signup() {
                 </svg>
                 {oauthLoading ? "Connecting..." : "Continue with Google"}
               </Button>
+              <p className="text-[11px] text-muted-foreground text-center mt-1.5">
+                New with Google? You will choose Candidate or Recruiter next.
+              </p>
 
-              <div className="relative">
+              <div className="relative my-2">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t" />
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">Or with email</span>
+                <div className="relative flex justify-center text-[10px] uppercase tracking-wider">
+                  <span className="bg-card px-2 text-muted-foreground font-semibold">Or sign up with email</span>
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fullname">Full Name</Label>
-                  <Input
-                    id="fullname"
-                    placeholder="e.g. John Doe"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                    autoComplete="name"
-                  />
+              <form onSubmit={handleSubmit} className="space-y-3.5">
+                <div className="space-y-1.5">
+                  <Label htmlFor="fullname" className="text-xs font-semibold">Full Name *</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    <Input
+                      id="fullname"
+                      placeholder="e.g. Priya Sharma"
+                      className="pl-9 h-10 text-sm"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required
+                      autoComplete="name"
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="name@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    autoComplete="email"
-                  />
+                <div className="space-y-1.5">
+                  <Label htmlFor="email" className="text-xs font-semibold">Email Address *</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="name@example.com"
+                      className="pl-9 h-10 text-sm"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      autoComplete="email"
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="password" className="text-xs font-semibold">Password *</Label>
                   <PasswordInput
                     id="password"
                     placeholder="••••••••"
@@ -210,11 +234,11 @@ export default function Signup() {
                     required
                     autoComplete="new-password"
                   />
-                  <p className="text-[11px] text-muted-foreground">Must be at least 8 characters</p>
+                  <p className="text-[10px] text-muted-foreground">Must be at least 8 characters</p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm Password</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="confirm-password" className="text-xs font-semibold">Confirm Password *</Label>
                   <PasswordInput
                     id="confirm-password"
                     placeholder="••••••••"
@@ -227,22 +251,23 @@ export default function Signup() {
 
                 <Turnstile onVerify={(token) => setCaptchaToken(token)} />
 
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Creating account..." : "Create Account"}
+                <Button type="submit" className="w-full h-10 text-sm font-semibold shadow-md shadow-primary/20" disabled={loading}>
+                  {loading ? "Creating account..." : "Create Account &rarr;"}
                 </Button>
               </form>
             </>
           )}
         </CardContent>
-        <CardFooter className="flex justify-center border-t py-4">
-          <p className="text-sm text-muted-foreground">
+
+        <CardFooter className="flex justify-center border-t py-4 bg-muted/20 rounded-b-xl">
+          <p className="text-xs text-muted-foreground">
             Already have an account?{" "}
-            <Link to="/login" className="text-primary font-medium hover:underline">
-              Sign in
+            <Link to="/login" className="text-primary font-bold hover:underline inline-flex items-center gap-1">
+              <Sparkles className="h-3 w-3" /> Sign in here
             </Link>
           </p>
         </CardFooter>
       </Card>
-    </div>
+    </PageTransition>
   )
 }

@@ -21,6 +21,10 @@ export function ProtectedRoute({ children }) {
     return <Navigate to="/onboarding" replace />
   }
 
+  if (profile?.role === "admin") {
+    return <Navigate to="/admin" replace />
+  }
+
   return children ? children : <Outlet />
 }
 
@@ -103,6 +107,9 @@ export function PublicOnlyRoute({ children }) {
     if (profile && profile.role === null) {
       return <Navigate to="/onboarding" replace />
     }
+    if (profile?.role === "admin") {
+      return <Navigate to="/admin" replace />
+    }
     return <Navigate to="/dashboard" replace />
   }
 
@@ -125,6 +132,9 @@ export function OnboardingRoute({ children }) {
   }
 
   if (profile && profile.role !== null) {
+    if (profile.role === "admin") {
+      return <Navigate to="/admin" replace />
+    }
     return <Navigate to="/dashboard" replace />
   }
 

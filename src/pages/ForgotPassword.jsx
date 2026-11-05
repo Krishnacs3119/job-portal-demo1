@@ -1,11 +1,13 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
+import { KeyRound, Mail, ArrowLeft, CheckCircle2 } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import PageTransition from "@/components/PageTransition"
 
 export default function ForgotPassword() {
   const { resetPasswordForEmail } = useAuth()
@@ -42,52 +44,62 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="max-w-md mx-auto py-8">
-      <Card>
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Forgot Password</CardTitle>
-          <CardDescription>
-            Enter your email to receive a password reset link and unlock your account
+    <PageTransition className="max-w-md mx-auto py-8 sm:py-12">
+      <Card className="shadow-lg border bg-card/95 backdrop-blur-sm">
+        <CardHeader className="space-y-1.5 text-center pb-4">
+          <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-1">
+            <KeyRound className="h-5 w-5" />
+          </div>
+          <CardTitle className="text-2xl font-heading font-extrabold tracking-tight">
+            Forgot Password
+          </CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
+            Enter your email to receive a secure password reset link
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-2">
           {errorMsg && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="text-xs py-2.5">
               <AlertDescription>{errorMsg}</AlertDescription>
             </Alert>
           )}
 
           {successMsg && (
-            <Alert className="border-green-600 bg-green-50 text-green-900 dark:bg-green-950 dark:text-green-200">
+            <Alert className="border-emerald-500/40 bg-emerald-500/10 text-emerald-800  text-xs py-2.5">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 " />
               <AlertDescription>{successMsg}</AlertDescription>
             </Alert>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Registered Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-              />
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-xs font-semibold">Registered Email Address</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  className="pl-9 h-10 text-sm"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                />
+              </div>
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Sending link..." : "Send Reset Link"}
+            <Button type="submit" className="w-full h-10 text-sm font-semibold shadow-md shadow-primary/20" disabled={loading}>
+              {loading ? "Sending reset link..." : "Send Reset Link &rarr;"}
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center border-t py-4">
-          <Link to="/login" className="text-sm text-primary hover:underline">
-            Back to Sign In
+        <CardFooter className="flex justify-center border-t py-4 bg-muted/20 rounded-b-xl">
+          <Link to="/login" className="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to Sign In
           </Link>
         </CardFooter>
       </Card>
-    </div>
+    </PageTransition>
   )
 }

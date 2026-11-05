@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
+import { Lock, Mail, ShieldAlert, Sparkles } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 import Turnstile from "@/components/Turnstile"
 import PhoneOtpForm from "@/components/PhoneOtpForm"
@@ -9,6 +10,7 @@ import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import PageTransition from "@/components/PageTransition"
 
 export default function Login() {
   const { loginWithPassword, signInWithGoogle } = useAuth()
@@ -79,19 +81,26 @@ export default function Login() {
   }
 
   return (
-    <div className="max-w-md mx-auto py-8">
-      <Card>
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-          <CardDescription>
-            Sign in to access your jobs, applications, and account
+    <PageTransition className="max-w-md mx-auto py-6 sm:py-10">
+      <Card className="shadow-lg border bg-card/95 backdrop-blur-sm">
+        <CardHeader className="space-y-1.5 text-center pb-4">
+          <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-1">
+            <Lock className="h-5 w-5" />
+          </div>
+          <CardTitle className="text-2xl font-heading font-extrabold tracking-tight">
+            Welcome Back
+          </CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
+            Sign in to access your jobs, applications, and portal dashboard
           </CardDescription>
 
-          <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1 mt-3">
+          <div className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1 mt-4">
             <button
               type="button"
-              className={`rounded-md py-1.5 text-xs font-medium transition-all ${
-                authMethod === "email" ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"
+              className={`rounded-lg py-2 text-xs font-semibold transition-all ${
+                authMethod === "email"
+                  ? "bg-background shadow-sm text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
               onClick={() => {
                 setAuthMethod("email")
@@ -102,8 +111,10 @@ export default function Login() {
             </button>
             <button
               type="button"
-              className={`rounded-md py-1.5 text-xs font-medium transition-all ${
-                authMethod === "phone" ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"
+              className={`rounded-lg py-2 text-xs font-semibold transition-all ${
+                authMethod === "phone"
+                  ? "bg-background shadow-sm text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
               onClick={() => {
                 setAuthMethod("phone")
@@ -114,22 +125,25 @@ export default function Login() {
             </button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+
+        <CardContent className="space-y-4 pt-2">
           {authMethod === "phone" ? (
             <PhoneOtpForm mode="login" />
           ) : (
             <>
               {errorMsg && (
-                <Alert variant={isLocked ? "destructive" : "default"} className="border-destructive/50 text-destructive">
-                  <AlertDescription className="space-y-2">
+                <Alert variant={isLocked ? "destructive" : "default"} className="border-destructive/40 text-destructive text-xs py-2.5">
+                  <ShieldAlert className="h-4 w-4" />
+                  <AlertDescription className="space-y-1">
                     <p>{errorMsg}</p>
                     {isLocked && (
-                      <p className="text-xs font-semibold">
+                      <p className="font-semibold text-[11px]">
+                        {remainingMinutes ? `Locked for ${remainingMinutes} mins. ` : ""}
                         Need urgent access?{" "}
                         <Link to="/forgot-password" className="underline font-bold hover:opacity-80">
                           Reset your password
                         </Link>{" "}
-                        to unlock your account immediately.
+                        to unlock immediately.
                       </p>
                     )}
                   </AlertDescription>
@@ -139,11 +153,11 @@ export default function Login() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className="w-full h-10 text-xs font-semibold gap-2 hover:bg-muted/60 transition-colors"
                 onClick={handleGoogleLogin}
                 disabled={oauthLoading || loading}
               >
-                <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
                   <path
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                     fill="#4285F4"
@@ -163,34 +177,41 @@ export default function Login() {
                 </svg>
                 {oauthLoading ? "Connecting..." : "Continue with Google"}
               </Button>
+              <p className="text-[11px] text-muted-foreground text-center mt-1.5">
+                New with Google? You will choose Candidate or Recruiter next.
+              </p>
 
-              <div className="relative">
+              <div className="relative my-2">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t" />
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">Or with email</span>
+                <div className="relative flex justify-center text-[10px] uppercase tracking-wider">
+                  <span className="bg-card px-2 text-muted-foreground font-semibold">Or sign in with email</span>
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="name@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    autoComplete="email"
-                  />
+              <form onSubmit={handleSubmit} className="space-y-3.5">
+                <div className="space-y-1.5">
+                  <Label htmlFor="email" className="text-xs font-semibold">Email Address</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="name@example.com"
+                      className="pl-9 h-10 text-sm"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      autoComplete="email"
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                    <Link to="/forgot-password" className="text-xs text-muted-foreground hover:underline">
+                    <Label htmlFor="password" className="text-xs font-semibold">Password</Label>
+                    <Link to="/forgot-password" className="text-[11px] text-primary hover:underline">
                       Forgot password?
                     </Link>
                   </div>
@@ -202,27 +223,28 @@ export default function Login() {
                     required
                     autoComplete="current-password"
                   />
-                  <p className="text-[11px] text-muted-foreground">Must be at least 8 characters</p>
+                  <p className="text-[10px] text-muted-foreground">Must be at least 8 characters</p>
                 </div>
 
                 <Turnstile onVerify={(token) => setCaptchaToken(token)} />
 
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Signing in..." : "Sign In"}
+                <Button type="submit" className="w-full h-10 text-sm font-semibold shadow-md shadow-primary/20" disabled={loading}>
+                  {loading ? "Signing in..." : "Sign In &rarr;"}
                 </Button>
               </form>
             </>
           )}
         </CardContent>
-        <CardFooter className="flex justify-center border-t py-4">
-          <p className="text-sm text-muted-foreground">
+
+        <CardFooter className="flex justify-center border-t py-4 bg-muted/20 rounded-b-xl">
+          <p className="text-xs text-muted-foreground">
             Don&apos;t have an account?{" "}
-            <Link to="/signup" className="text-primary font-medium hover:underline">
-              Create an account
+            <Link to="/signup" className="text-primary font-bold hover:underline inline-flex items-center gap-1">
+              <Sparkles className="h-3 w-3" /> Create one now
             </Link>
           </p>
         </CardFooter>
       </Card>
-    </div>
+    </PageTransition>
   )
 }

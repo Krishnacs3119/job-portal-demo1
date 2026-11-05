@@ -1,14 +1,32 @@
 import { useEffect, useState, useCallback } from "react"
 import { Link } from "react-router-dom"
+import { 
+  FileText, 
+  Clock, 
+  Building2, 
+  MapPin, 
+  Briefcase, 
+  CheckCircle2, 
+  ArrowRight, 
+  Inbox, 
+  Sparkles,
+  ExternalLink,
+  XCircle,
+  Award
+} from "lucide-react"
+import { motion, useReducedMotion } from "framer-motion"
 import { useAuth } from "@/context/AuthContext"
 import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Skeleton } from "@/components/ui/skeleton"
+import PageTransition from "@/components/PageTransition"
 
 export default function MyApplications() {
   const { user } = useAuth()
+  const shouldReduceMotion = useReducedMotion()
   const [applications, setApplications] = useState([])
   const [loading, setLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState("")
@@ -22,7 +40,7 @@ export default function MyApplications() {
     return data || []
   }, [])
 
-  const loadApplications = useCallback(async () => {
+  const loadApplications = useCallback(async (isCancelled = () => false) => {
     try {
       const { data, error } = await supabase
         .from("applications")
@@ -56,25 +74,31 @@ export default function MyApplications() {
         })
       )
 
-      setApplications(appsWithTimeline)
+      if (!isCancelled()) {
+        setApplications(appsWithTimeline)
+      }
     } catch (err) {
-      setErrorMsg(err.message || "Failed to load applications.")
+      if (!isCancelled()) {
+        setErrorMsg(err.message || "Failed to load applications.")
+      }
     } finally {
-      setLoading(false)
+      if (!isCancelled()) {
+        setLoading(false)
+      }
     }
   }, [user?.id, fetchTimeline])
 
   useEffect(() => {
-    if (user?.id) {
-      loadApplications()
-    }
-  }, [user?.id, loadApplications])
-
-  useEffect(() => {
     if (!user?.id) return
 
+    let cancelled = false
+    const isCancelled = () => cancelled
+
+    loadApplications(isCancelled)
+
+    const channelName = `candidate-applications-${user.id}-${Math.random().toString(36).slice(2)}`
     const channel = supabase
-      .channel(`candidate-applications-${user.id}`)
+      .channel(channelName)
       .on(
         "postgres_changes",
         {
@@ -84,24 +108,28 @@ export default function MyApplications() {
           filter: `candidate_id=eq.${user.id}`,
         },
         async (payload) => {
+          if (cancelled) return
           if (payload.eventType === "UPDATE" && payload.new?.id) {
             const updatedId = payload.new.id
             const freshTimeline = await fetchTimeline(updatedId)
-            setApplications((prev) =>
-              prev.map((app) =>
-                app.id === updatedId
-                  ? { ...app, status: payload.new.status, timeline: freshTimeline }
-                  : app
+            if (!cancelled) {
+              setApplications((prev) =>
+                prev.map((app) =>
+                  app.id === updatedId
+                    ? { ...app, status: payload.new.status, timeline: freshTimeline }
+                    : app
+                )
               )
-            )
+            }
           } else {
-            loadApplications()
+            loadApplications(isCancelled)
           }
         }
       )
       .subscribe()
 
     return () => {
+      cancelled = true
       supabase.removeChannel(channel)
     }
   }, [user?.id, loadApplications, fetchTimeline])
@@ -125,120 +153,203 @@ export default function MyApplications() {
   }
 
   const statusBadgeVariants = {
-    applied: "bg-blue-600 text-white",
-    shortlisted: "bg-amber-600 text-white",
-    selected: "bg-emerald-600 text-white",
-    rejected: "bg-red-600 text-white",
+    applied: "bg-blue-600/15 text-blue-700  border border-blue-600/30",
+    shortlisted: "bg-amber-600/15 text-amber-700  border border-amber-600/30",
+    selected: "bg-emerald-600/15 text-emerald-700  border border-emerald-600/30",
+    rejected: "bg-rose-600/15 text-rose-700  border border-rose-600/30",
+  }
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "applied":
+        return <Clock className="h-3.5 w-3.5 text-blue-600 " />
+      case "shortlisted":
+        return <Sparkles className="h-3.5 w-3.5 text-amber-600 " />
+      case "selected":
+        return <Award className="h-3.5 w-3.5 text-emerald-600 " />
+      case "rejected":
+        return <XCircle className="h-3.5 w-3.5 text-rose-600 " />
+      default:
+        return <CheckCircle2 className="h-3.5 w-3.5" />
+    }
   }
 
   return (
-    <div className="space-y-6">
+    <PageTransition className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">My Job Applications</h1>
-          <p className="text-muted-foreground mt-1">
-            Track the status of applications you have submitted to hiring companies.
+          <h1 className="text-2xl sm:text-3xl font-heading font-extrabold tracking-tight text-foreground">
+            My Job Applications
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+            Track your recruitment progress, view uploaded resumes, and see live timeline updates.
           </p>
         </div>
-        <Badge variant="outline" className="text-xs">
-          Live Updates Active
+        <Badge variant="outline" className="text-xs gap-1.5 py-1 px-3 w-fit border-emerald-500/30 text-emerald-700  bg-emerald-500/5">
+          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping inline-block" />
+          Live Real-time Feed
         </Badge>
       </div>
 
       {errorMsg && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="text-xs">
           <AlertDescription>{errorMsg}</AlertDescription>
         </Alert>
       )}
 
+      {/* Skeletons while loading */}
       {loading ? (
-        <div className="flex h-64 items-center justify-center">
-          <p className="text-sm text-muted-foreground">Loading your applications...</p>
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="p-5 space-y-4">
+              <div className="flex justify-between items-start">
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-6 w-1/3" />
+                  <Skeleton className="h-4 w-1/4" />
+                </div>
+                <Skeleton className="h-8 w-24" />
+              </div>
+              <Skeleton className="h-10 w-full" />
+            </Card>
+          ))}
         </div>
       ) : applications.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-12 text-center space-y-3">
-          <h3 className="text-lg font-medium">You haven&apos;t submitted any applications yet</h3>
-          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-            Discover verified openings and submit your resume directly to hiring teams.
-          </p>
+        /* Empty state */
+        <Card className="rounded-2xl border-dashed p-10 sm:p-14 text-center space-y-4 bg-card/40">
+          <div className="h-12 w-12 rounded-2xl bg-muted/80 text-muted-foreground flex items-center justify-center mx-auto">
+            <Inbox className="h-6 w-6" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-lg font-heading font-semibold text-foreground">
+              You haven&apos;t submitted any applications yet
+            </h3>
+            <p className="text-xs sm:text-sm text-muted-foreground max-w-sm mx-auto">
+              Explore verified roles matching your skills and apply with a single click.
+            </p>
+          </div>
           <Link to="/jobs">
-            <Button>Explore Open Jobs</Button>
+            <Button size="sm" className="gap-1.5 shadow-sm shadow-primary/20">
+              <Briefcase className="h-3.5 w-3.5" />
+              <span>Explore Open Jobs</span>
+            </Button>
           </Link>
-        </div>
+        </Card>
       ) : (
+        /* Applications List */
         <div className="space-y-4">
           {applications.map((app) => {
             const timeline = app.timeline || []
 
             return (
-              <Card key={app.id} className="p-5 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Link to={`/jobs/${app.job?.id}`} className="font-semibold text-lg hover:underline">
-                        {app.job?.title || "Position"}
-                      </Link>
-                      <Badge className={`uppercase text-[11px] tracking-wide ${statusBadgeVariants[app.status] || ""}`}>
-                        {app.status}
-                      </Badge>
-                    </div>
-                    <div className="flex flex-wrap gap-x-4 text-xs text-muted-foreground">
-                      <span>Company: {app.job?.company?.name || "Company"}</span>
-                      <span>Location: {app.job?.location || "Location"}</span>
-                      <span>Type: {app.job?.job_type?.replace("_", " ")}</span>
-                      <span>Submitted: {new Date(app.created_at).toLocaleDateString()}</span>
-                    </div>
-                  </div>
+              <motion.div
+                key={app.id}
+                whileHover={shouldReduceMotion ? {} : { y: -2 }}
+                transition={{ duration: 0.15 }}
+              >
+                <Card className="p-5 space-y-4 shadow-sm hover:border-primary/40 hover:shadow-md transition-all duration-200">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                    <div className="space-y-1.5 flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link
+                          to={`/jobs/${app.job?.id}`}
+                          className="font-heading font-bold text-lg text-foreground hover:text-primary transition-colors line-clamp-1"
+                        >
+                          {app.job?.title || "Position"}
+                        </Link>
+                        <Badge
+                          className={`uppercase text-[10px] font-bold tracking-wider flex items-center gap-1 ${
+                            statusBadgeVariants[app.status] || ""
+                          }`}
+                        >
+                          {getStatusIcon(app.status)}
+                          <span>{app.status}</span>
+                        </Badge>
+                      </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleViewResume(app.id, app.resume_path)}
-                      disabled={resumeLoadingId === app.id}
-                    >
-                      {resumeLoadingId === app.id ? "Opening..." : "View Resume"}
-                    </Button>
-                    <Link to={`/jobs/${app.job?.id}`}>
-                      <Button variant="ghost" size="sm">
-                        View Job
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <span className="font-semibold text-foreground flex items-center gap-1">
+                          <Building2 className="h-3.5 w-3.5 text-primary" />
+                          {app.job?.company?.name || "Company"}
+                        </span>
+                        <span>&bull;</span>
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3.5 w-3.5" />
+                          {app.job?.location || "Location"}
+                        </span>
+                        <span>&bull;</span>
+                        <span className="capitalize">{app.job?.job_type?.replace("_", " ")}</span>
+                        <span>&bull;</span>
+                        <span>Submitted {new Date(app.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs gap-1"
+                        onClick={() => handleViewResume(app.id, app.resume_path)}
+                        disabled={resumeLoadingId === app.id}
+                      >
+                        <FileText className="h-3.5 w-3.5" />
+                        <span>{resumeLoadingId === app.id ? "Opening..." : "View Resume"}</span>
                       </Button>
-                    </Link>
+                      <Link to={`/jobs/${app.job?.id}`}>
+                        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1">
+                          <span>Job Details</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
-                </div>
 
-                <div className="pt-3 border-t">
-                  <p className="text-xs font-semibold text-muted-foreground mb-2">Status Timeline:</p>
-                  {timeline.length === 0 ? (
-                    <div className="flex items-center gap-1.5 bg-muted/60 px-2.5 py-1 rounded-md border text-foreground w-fit text-xs">
-                      <span className="font-bold uppercase tracking-wider text-[10px]">{app.status}</span>
-                      <span className="text-muted-foreground text-[10px]">
-                        {new Date(app.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                      {timeline.map((h, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          <div className="flex items-center gap-1.5 bg-muted/60 px-2.5 py-1 rounded-md border text-foreground">
-                            <span className="font-bold uppercase tracking-wider text-[10px]">{h.to_status}</span>
-                            <span className="text-muted-foreground text-[10px]">
-                              {new Date(h.created_at).toLocaleDateString()}
-                            </span>
+                  {/* Animated Status Timeline */}
+                  <div className="pt-3 border-t">
+                    <p className="text-[11px] font-semibold text-muted-foreground mb-2.5 flex items-center gap-1">
+                      <Clock className="h-3.5 w-3.5" />
+                      <span>Application Timeline:</span>
+                    </p>
+
+                    {timeline.length === 0 ? (
+                      <div className="flex items-center gap-1.5 bg-muted/60 px-3 py-1.5 rounded-lg border text-foreground w-fit text-xs">
+                        {getStatusIcon(app.status)}
+                        <span className="font-bold uppercase tracking-wider text-[10px]">{app.status}</span>
+                        <span className="text-muted-foreground text-[10px]">
+                          ({new Date(app.created_at).toLocaleDateString()})
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap items-center gap-2 text-xs">
+                        {timeline.map((h, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <motion.div
+                              initial={shouldReduceMotion ? {} : { scale: 0.95, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              className="flex items-center gap-1.5 bg-card px-2.5 py-1.5 rounded-lg border shadow-xs"
+                            >
+                              {getStatusIcon(h.to_status)}
+                              <span className="font-bold uppercase tracking-wider text-[10px] text-foreground">
+                                {h.to_status}
+                              </span>
+                              <span className="text-muted-foreground text-[10px]">
+                                {new Date(h.created_at).toLocaleDateString()}
+                              </span>
+                            </motion.div>
+                            {idx < timeline.length - 1 && (
+                              <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
+                            )}
                           </div>
-                          {idx < timeline.length - 1 && (
-                            <span className="text-muted-foreground font-bold">&rarr;</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </Card>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              </motion.div>
             )
           })}
         </div>
       )}
-    </div>
+    </PageTransition>
   )
 }

@@ -10,6 +10,7 @@ import CompanySetup from "@/pages/CompanySetup"
 import SavedJobs from "@/pages/SavedJobs"
 import MyApplications from "@/pages/MyApplications"
 import JobApplicants from "@/pages/JobApplicants"
+import RecruiterCredits from "@/pages/RecruiterCredits"
 import Login from "@/pages/Login"
 import Signup from "@/pages/Signup"
 import ForgotPassword from "@/pages/ForgotPassword"
@@ -81,6 +82,14 @@ const router = createBrowserRouter([
         element: (
           <RoleRoute allowedRoles={["recruiter", "admin"]}>
             <JobApplicants />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: "dashboard/credits",
+        element: (
+          <RoleRoute allowedRoles={["recruiter", "admin"]}>
+            <RecruiterCredits />
           </RoleRoute>
         ),
       },

@@ -23,9 +23,37 @@ serve(async (req) => {
 
     const normalizedEmail = email.trim().toLowerCase()
 
-    // 1. Optional Cloudflare Turnstile CAPTCHA verification
+    // 1. Cloudflare Turnstile CAPTCHA verification
+    const requireCaptcha = Deno.env.get("REQUIRE_CAPTCHA")?.toLowerCase() === "true"
     const turnstileSecret = Deno.env.get("TURNSTILE_SECRET_KEY")
-    if (turnstileSecret) {
+
+    if (requireCaptcha) {
+      // Fail closed: reject if TURNSTILE_SECRET_KEY is missing, captchaToken is missing, or verification fails
+      if (!turnstileSecret || !captchaToken) {
+        return new Response(
+          JSON.stringify({ error: "CAPTCHA verification is required. Please try again." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        )
+      }
+
+      const verifyRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          secret: turnstileSecret,
+          response: captchaToken,
+        }),
+      })
+
+      const verifyData = await verifyRes.json().catch(() => ({ success: false }))
+      if (!verifyData?.success) {
+        return new Response(
+          JSON.stringify({ error: "CAPTCHA verification failed. Please try again." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        )
+      }
+    } else if (turnstileSecret) {
+      // If REQUIRE_CAPTCHA is not 'true', behave as before (skip when unset, verify if secret is set)
       if (!captchaToken) {
         return new Response(
           JSON.stringify({ error: "CAPTCHA token is required" }),
@@ -42,8 +70,8 @@ serve(async (req) => {
         }),
       })
 
-      const verifyData = await verifyRes.json()
-      if (!verifyData.success) {
+      const verifyData = await verifyRes.json().catch(() => ({ success: false }))
+      if (!verifyData?.success) {
         return new Response(
           JSON.stringify({ error: "CAPTCHA verification failed. Please try again." }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
